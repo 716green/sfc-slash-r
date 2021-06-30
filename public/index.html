@@ -1,0 +1,132 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Programming Memes</title>
+    <link rel="stylesheet" href="https://unpkg.com/bamboo.css" />
+    <style>
+      .dropdown {
+        display: flex;
+      }
+      .post {
+        width: 100%;
+      }
+      .image {
+        width: 100%;
+        margin: auto;
+        display: flex;
+        justify-content: center;
+      }
+      .center {
+        justify-content: center;
+      }
+    </style>
+  </head>
+  <body>
+    <section id="app">
+      <h2>Programming</h2>
+      <div class="dropdown">
+        <input type="text" v-model="sr" />
+        <button v-on:click="fetchMemes">Get /r/{{sr}}</button>
+      </div>
+      <section v-show="!!memes">
+        <div class="images" v-for="(image, i) in images" :key="i">
+          <div class="post" v-if="isVideo(image.url_overridden_by_dest)"></div>
+          <div class="post" v-else>
+            <br />
+            <hr />
+            <h2>{{image.title}}</h2>
+            <span class="center">
+              <h5>
+                <a href="https://reddit.com/r/programmingmemes"
+                  >Original Content</a
+                >
+              </h5>
+            </span>
+            <div class="image">
+              <img
+                v-show="image.url_overridden_by_dest"
+                :src="image.url_overridden_by_dest"
+                alt="meme"
+              />
+            </div>
+          </div>
+        </div>
+        <!-- <div class="code">
+          <pre v-show="posts.length > 1"><code>{{images}}</code></pre>
+        </div>
+        <pre v-show="posts.length > 1"><code>{{posts}}</code></pre> -->
+      </section>
+    </section>
+    <script src="https://unpkg.com/vue@next"></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"
+      integrity="sha512-bZS47S7sPOxkjU/4Bt0zrhEtWx0y0CRkhEp8IckzK+ltifIIE9EMIMTuT/mEzoIMewUINruDBIR/jJnbguonqQ=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script>
+      Vue.createApp({
+        data() {
+          return {
+            memes: null,
+            posts: [],
+            images: [],
+            imgPosts: [],
+            myDropdown: false,
+            sr: 'programmingmemes',
+          };
+        },
+        watch: {
+          drilledDown() {
+            if (!!this.drilledDown) {
+              this.parseImages();
+            }
+          },
+        },
+        computed: {
+          drilledDown() {
+            return this.memes?.data?.children;
+          },
+        },
+        methods: {
+          toggleDropdown() {
+            this.myDropdown = true;
+          },
+          isVideo(value) {
+            if (value && value.includes('video')) {
+              return true;
+            } else if (value && value.includes('png')) {
+              return false;
+            } else {
+              return true;
+            }
+          },
+          fetchMemes() {
+            axios
+              .get('https://api.reddit.com/r/programmingmemes')
+              .then((res) => {
+                this.memes = res.data;
+              });
+          },
+          parseImages() {
+            this.drilledDown.forEach((item, i) => {
+              if (i > 0) {
+                this.posts.push(item);
+              }
+              if (i === this.drilledDown.length - 1) {
+                this.parsePosts();
+              }
+            });
+          },
+          parsePosts() {
+            this.posts.forEach((imgPost) => {
+              const target = Object.assign({}, imgPost);
+              this.images.push(target.data);
+            });
+          },
+        },
+      }).mount('#app');
+    </script>
+  </body>
+</html>
